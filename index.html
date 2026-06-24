@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MockPrep</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800">
+
+    <!-- ==================== AUTH SCREEN ==================== -->
+    <div id="auth-container" class="glass-card w-full max-w-md p-6 md:p-8 space-y-6">
+        <div class="text-center space-y-2">
+            <h1 class="text-3xl font-bold text-white tracking-tight">MockPrep</h1>
+            <p class="text-white/70 text-sm">Your Gateway to CBT Success</p>
+        </div>
+
+        <div class="flex bg-black/20 p-1 rounded-lg border border-white/10">
+            <button id="tab-login" onclick="switchTab('login')" class="tab-btn active flex-1 py-2 rounded-md text-sm font-medium transition-all">Login</button>
+            <button id="tab-signup" onclick="switchTab('signup')" class="tab-btn flex-1 py-2 rounded-md text-sm font-medium transition-all">Sign Up</button>
+        </div>
+
+        <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-4">
+            <input type="text" id="input-name" placeholder="Full Name" class="glass-input hidden">
+            <input type="email" id="input-email" placeholder="Email Address" required class="glass-input">
+            <input type="password" id="input-password" placeholder="Password" required class="glass-input">
+
+            <div id="forgot-password" class="text-right">
+                <button type="button" onclick="handleForgotPassword()" class="text-sm text-blue-300 hover:text-blue-200 underline underline-offset-4">Forgot Password?</button>
+            </div>
+
+            <div class="space-y-3">
+                <label class="text-sm text-white/80 font-medium">Security Captcha</label>
+                <div class="flex items-center gap-3">
+                    <div id="captcha-display" class="flex-1 bg-black/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 flex justify-center items-center relative overflow-hidden min-h-[56px]">
+                        <div class="absolute inset-0 opacity-20">
+                            <div class="absolute top-1/2 left-0 w-full h-px bg-white transform rotate-12"></div>
+                            <div class="absolute top-1/3 left-0 w-full h-px bg-white transform -rotate-6"></div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="generateCaptcha()" class="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-all active:scale-95">🔄</button>
+                </div>
+                <input type="text" id="input-captcha" placeholder="Enter captcha code" maxlength="4" required class="glass-input">
+                <p id="captcha-error" class="text-red-400 text-xs hidden">Incorrect captcha. Please try again.</p>
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg transition-all transform hover:scale-[1.02] active:scale-95">
+                Login to MockPrep
+            </button>
+        </form>
+        <p class="text-center text-xs text-white/50">Secured by Supabase & MockPrep Team</p>
+    </div>
+
+   <!-- ==================== ADMIN DASHBOARD ==================== -->
+<div id="admin-dashboard" class="hidden w-full max-w-md mx-auto p-4 pb-28 space-y-6">
+    
+    <!-- Top Header -->
+    <div class="flex justify-between items-center pt-2">
+        <div>
+            <h1 class="text-2xl font-bold text-white">MockPrep Admin</h1>
+            <p class="text-pink-100 text-sm">Welcome back, <span id="admin-name" class="font-semibold text-white">Admin</span></p>
+        </div>
+        <button onclick="logout()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">🚪</button>
+    </div>
+    
+    <!-- Top Search Bar -->
+    <div class="relative">
+        <input type="text" placeholder="Search tests, users, PDFs..." class="w-full pl-11 pr-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white placeholder-pink-100/70 outline-none focus:border-white/50 transition">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-pink-100/70 text-lg">🔍</span>
+    </div>
+    
+    <!-- 3x2 Category Grid -->
+    <div class="grid grid-cols-3 gap-3">
+        <!-- 1. Free Mock Test -->
+<div onclick="showCreateTestScreen1()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+    <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">📝</div>
+    <span class="text-white text-[11px] font-medium text-center leading-tight">Free Mock Test</span>
+</div>
+        <!-- 2. Mini Mock Test -->
+<div onclick="showAdminMiniMockScreen1()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+    <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">⏱️</div>
+    <span class="text-white text-[11px] font-medium text-center leading-tight">Mini Mock Test</span>
+</div>
+        <!-- 3. Notifications -->
+<div onclick="showAdminNotificationScreen()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+    <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">🔔</div>
+    <span class="text-white text-[11px] font-medium text-center leading-tight">Notifications</span>
+</div>
+        <!-- 4. Sectional Timer -->
+<div onclick="showAdminSectionalScreen1()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+    <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">⏳</div>
+    <span class="text-white text-[11px] font-medium text-center leading-tight">Sectional Timer</span>
+</div>
+        <!-- 5. Previous Papers -->
+        <div class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+            <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">📚</div>
+            <span class="text-white text-[11px] font-medium text-center leading-tight">Previous Papers</span>
+        </div>
+        <!-- 6. Study Material -->
+        <div class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+            <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">📖</div>
+            <span class="text-white text-[11px] font-medium text-center leading-tight">Study Material</span>
+        </div>
+    </div>
+    
+   <!-- Quick Stats Card -->
+<div class="glass-card p-4 space-y-3">
+    <h3 class="text-white font-semibold text-lg">Platform Stats</h3>
+    <div class="flex justify-between text-sm text-pink-100/80 border-b border-white/10 pb-2">
+        <span>Total Registered Users</span>
+        <span class="text-white font-bold" id="home-stat-users">Loading...</span>
+    </div>
+    <div class="flex justify-between text-sm text-pink-100/80">
+        <span>Active Mock Tests</span>
+        <span class="text-white font-bold" id="home-stat-tests">Loading...</span>
+    </div>
+</div>
+</div>
+
+<!-- ==================== CREATE FREE MOCK TEST - SCREEN 1 ==================== -->
+    <div id="admin-create-test-screen1" class="hidden fixed inset-0 z-40 overflow-y-auto p-4 pb-8 bg-gradient-to-br from-pink-900 via-rose-800 to-pink-900">
+        <div class="max-w-md mx-auto space-y-6">
+            
+            <!-- Header -->
+            <div class="flex items-center gap-3 pt-2">
+                <button onclick="goBackToAdminHome()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">⬅️</button>
+                <h2 class="text-xl font-bold text-white">Create Free Mock Test</h2>
+            </div>
+
+            <!-- Form -->
+            <form id="form-screen1" onsubmit="handleScreen1Submit(event)" class="glass-card p-6 space-y-4">
+                
+                <!-- 1. Exam Title -->
+                <div class="space-y-1">
+                    <label class="text-sm text-white/90 font-medium">Exam Title</label>
+                    <input type="text" id="exam-title" placeholder="e.g., SSC CGL Tier 1" required class="glass-input">
+                </div>
+
+                <!-- 2 & 3. Total Questions & Max Marks -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-sm text-white/90 font-medium">Total Questions</label>
+                        <input type="number" id="total-questions" placeholder="100" required class="glass-input">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm text-white/90 font-medium">Maximum Marks</label>
+                        <input type="number" id="max-marks" placeholder="200" required class="glass-input">
+                    </div>
+                </div>
+
+                <!-- 4. Duration -->
+                <div class="space-y-1">
+                    <label class="text-sm text-white/90 font-medium">Duration (in minutes)</label>
+                    <input type="number" id="duration" placeholder="60" required class="glass-input">
+                </div>
+
+                <!-- 5 & 6. Right & Negative Marks -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-sm text-white/90 font-medium">Right Answer Marks</label>
+                        <input type="number" step="0.01" id="right-marks" placeholder="2" required class="glass-input">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm text-white/90 font-medium">Negative Marks</label>
+                        <input type="number" step="0.01" id="negative-marks" placeholder="0.5" required class="glass-input">
+                    </div>
+                </div>
+
+                <!-- 7. Subjects Name -->
+                <div class="space-y-1">
+                    <label class="text-sm text-white/90 font-medium">Subjects Name</label>
+                    <input type="text" id="subjects" placeholder="e.g., Math, English, GK" required class="glass-input">
+                </div>
+
+                <!-- 8. Optional Subjects -->
+                <div class="space-y-1">
+                    <label class="text-sm text-white/90 font-medium">Optional Subjects</label>
+                    <input type="text" id="optional-subjects" placeholder="e.g., Statistics, Commerce" class="glass-input">
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="goBackToAdminHome()" class="flex-1 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition active:scale-95">Back</button>
+                    <button type="submit" class="flex-1 py-3 bg-white text-pink-700 font-bold rounded-lg shadow-lg hover:bg-pink-50 transition active:scale-95">Save & Next</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<!-- ==================== CREATE FREE MOCK TEST - SCREEN 2 (QUESTIONS BUILDER) ==================== -->
+    <div id="admin-create-test-screen2" class="hidden fixed inset-0 z-40 overflow-y-auto p-4 pb-8 bg-gradient-to-br from-pink-900 via-rose-800 to-pink-900">
+        <div class="max-w-md mx-auto space-y-4">
+            
+            <!-- Header with Back & Toggle -->
+            <div class="flex items-center justify-between pt-2">
+                <button onclick="goBackToScreen1()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">⬅️</button>
+                <h2 class="text-lg font-bold text-white flex-1 text-center">Questions Builder</h2>
+                <button onclick="toggleSlidePanel()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95" title="View Questions">📋</button>
+            </div>
+
+            <!-- Test Info Bar -->
+            <div class="glass-card p-3 flex justify-between items-center text-xs">
+                <div>
+                    <p class="text-white/70">Test:</p>
+                    <p class="text-white font-semibold" id="screen2-test-title">-</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-white/70">Questions Added:</p>
+                    <p class="text-white font-semibold"><span id="screen2-q-count">0</span> / <span id="screen2-q-total">0</span></p>
+                </div>
+            </div>
+
+            <!-- Subject Tabs (Horizontal Scroll) -->
+            <div id="subject-tabs-container" class="flex gap-2 overflow-x-auto pb-2">
+                <!-- Tabs injected by JS -->
+            </div>
+
+            <!-- Question Form -->
+            <div class="glass-card p-4 space-y-4">
+                
+                <!-- Question Text -->
+                <div class="space-y-1">
+                    <label class="text-sm text-white/90 font-medium">Question <span id="current-q-number" class="text-pink-200">#1</span></label>
+                    <textarea id="question-text" rows="3" placeholder="Type your question here..." class="glass-input resize-none"></textarea>
+                    <div class="flex items-center gap-2 mt-2">
+                        <label class="image-upload-btn">
+                            📷 Add Image
+                            <input type="file" accept="image/*" onchange="handleImageUpload(event, 'question-image')" class="hidden">
+                        </label>
+                        <div id="question-image-preview"></div>
+                    </div>
+                </div>
+
+                <!-- Options -->
+                <div class="space-y-2">
+                    <label class="text-sm text-white/90 font-medium">Options (Select correct answer)</label>
+                    
+                    <div class="option-row">
+                        <input type="radio" name="correct-option" value="0" checked>                        <div class="flex-1 space-y-1">
+                            <input type="text" id="option-0" placeholder="Option A" class="glass-input">
+                            <div class="flex items-center gap-2">
+                                <label class="image-upload-btn">
+                                    📷 Image
+                                    <input type="file" accept="image/*" onchange="handleImageUpload(event, 'option-0-image')" class="hidden">
+                                </label>
+                                <div id="option-0-image-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-row">
+                        <input type="radio" name="correct-option" value="1">
+                        <div class="flex-1 space-y-1">
+                            <input type="text" id="option-1" placeholder="Option B" class="glass-input">
+                            <div class="flex items-center gap-2">
+                                <label class="image-upload-btn">
+                                    📷 Image
+                                    <input type="file" accept="image/*" onchange="handleImageUpload(event, 'option-1-image')" class="hidden">
+                                </label>
+                                <div id="option-1-image-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-row">
+                        <input type="radio" name="correct-option" value="2">
+                        <div class="flex-1 space-y-1">
+                            <input type="text" id="option-2" placeholder="Option C" class="glass-input">
+                            <div class="flex items-center gap-2">
+                                <label class="image-upload-btn">
+                                    📷 Image
+                                    <input type="file" accept="image/*" onchange="handleImageUpload(event, 'option-2-image')" class="hidden">
+                                </label>
+                                <div id="option-2-image-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-row">
+                        <input type="radio" name="correct-option" value="3">
+                        <div class="flex-1 space-y-1">
+                            <input type="text" id="option-3" placeholder="Option D" class="glass-input">
+                            <div class="flex items-center gap-2">
+                                <label class="image-upload-btn">
+                                    📷 Image
+                                    <input type="file" accept="image/*" onchange="handleImageUpload(event, 'option-3-image')" class="hidden">
+                                </label>
+                                <div id="option-3-image-preview"></div>                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Question Button -->
+                <button type="button" onclick="saveCurrentQuestion()" class="w-full py-3 bg-white text-pink-700 font-bold rounded-lg shadow-lg hover:bg-pink-50 transition active:scale-95">
+                    💾 Save Question & Add Next
+                </button>
+            </div>
+
+            <!-- Final Publish Button (appears when all questions added) -->
+            <button id="publish-test-btn" onclick="publishTest()" class="hidden w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-lg shadow-lg hover:opacity-90 transition active:scale-95">
+                🚀 Publish Mock Test
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== SLIDE PANEL (Questions Overview) ==================== -->
+    <div id="slide-panel-overlay" class="slide-panel-overlay" onclick="toggleSlidePanel()"></div>
+    <div id="slide-panel" class="slide-panel">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/20">
+            <h3 class="text-lg font-bold text-white">Questions Overview</h3>
+            <button onclick="toggleSlidePanel()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition">✖️</button>
+        </div>
+        <div id="slide-panel-content" class="space-y-4">
+            <!-- Subject-wise questions injected by JS -->
+        </div>
+    </div>
+
+   <!-- ==================== CANDIDATE DASHBOARD HOME ==================== -->
+<div id="candidate-dashboard" class="hidden w-full max-w-md mx-auto p-4 pb-28 space-y-6">
+    
+    <!-- Top Header -->
+    <div class="flex justify-between items-center pt-2">
+        <div>
+            <h1 class="text-2xl font-bold text-white">MockPrep</h1>
+            <p class="text-pink-100 text-sm">Hello, <span id="candidate-name" class="font-semibold text-white">Candidate</span> 👋</p>
+        </div>
+        <button onclick="logout()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">🚪</button>
+    </div>
+    
+    <!-- Top Search Bar -->
+    <div class="relative">
+        <input type="text" placeholder="Search tests, subjects..." class="w-full pl-11 pr-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white placeholder-pink-100/70 outline-none focus:border-white/50 transition">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-pink-100/70 text-lg">🔍</span>
+    </div>
+    
+    <!-- 3x2 Category Grid -->
+    <div class="grid grid-cols-3 gap-3">
+        <!-- 1. Free Mock Test -->
+        <div onclick="showCandidateFreeMockTests()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+            <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">📝</div>
+            <span class="text-white text-[11px] font-medium text-center leading-tight">Free Mock Test</span>
+        </div>
+        <!-- 2. Mini Mock Test -->
+<div onclick="showCandidateMiniMocks()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+    <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">⏱️</div>
+    <span class="text-white text-[11px] font-medium text-center leading-tight">Mini Mock Test</span>
+</div>
+        <!-- 3. Notifications -->
+<div onclick="showCandidateNotifications()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+    <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl"></div>
+    <span class="text-white text-[11px] font-medium text-center leading-tight">Notifications</span>
+</div>
+        <!-- 4. Sectional Timer -->
+<div onclick="showCandidateSectionalTests()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+    <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">⏳</div>
+    <span class="text-white text-[11px] font-medium text-center leading-tight">Sectional Timer</span>
+</div>
+        <!-- 5. Previous Papers -->
+        <div onclick="showComingSoon('Previous Papers')" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+            <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">📚</div>
+            <span class="text-white text-[11px] font-medium text-center leading-tight">Previous Papers</span>
+        </div>
+        <!-- 6. Study Material -->
+        <div onclick="showComingSoon('Study Material')" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+            <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">📖</div>
+            <span class="text-white text-[11px] font-medium text-center leading-tight">Study Material</span>
+        </div>
+    </div>
+    
+    <!-- Recent Free Mock Tests Card -->
+    <div class="glass-card p-4 space-y-3">
+        <div class="flex justify-between items-center">
+            <h3 class="text-white font-semibold text-lg">📝 Latest Free Mock Tests</h3>
+            <button onclick="showCandidateFreeMockTests()" class="text-xs text-pink-200 hover:text-white underline">View All</button>
+        </div>
+        <div id="candidate-home-tests-list" class="space-y-2">
+            <p class="text-white/60 text-sm text-center py-4">Loading tests...</p>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== CANDIDATE FREE MOCK TESTS LIST ==================== -->
+<div id="candidate-free-mock-list" class="hidden fixed inset-0 z-40 overflow-y-auto p-4 pb-8 bg-gradient-to-br from-pink-900 via-rose-800 to-pink-900">
+    <div class="max-w-md mx-auto space-y-4">
+        
+        <!-- Header -->
+        <div class="flex items-center gap-3 pt-2">
+            <button onclick="goBackToCandidateHome()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">⬅️</button>
+            <h2 class="text-xl font-bold text-white">Free Mock Tests</h2>
+        </div>
+        
+        <!-- Tests List -->
+        <div id="candidate-tests-container" class="space-y-3">
+            <p class="text-white/60 text-sm text-center py-8">Loading tests...</p>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== CANDIDATE MINI MOCK TESTS LIST ==================== -->
+    <div id="candidate-mini-mock-list" class="hidden fixed inset-0 z-40 overflow-y-auto p-4 pb-8 bg-gradient-to-br from-pink-900 via-rose-800 to-pink-900">
+        <div class="max-w-md mx-auto space-y-4">
+            
+            <!-- Header -->
+            <div class="flex items-center gap-3 pt-2">
+                <button onclick="goBackToCandidateHome()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">⬅️</button>
+                <h2 class="text-xl font-bold text-white">⏱️ Mini Mock Tests</h2>
+            </div>
+
+            <!-- Info Card -->
+            <div class="glass-card p-4 border-l-4 border-blue-400">
+                <p class="text-white text-sm font-semibold">Quick Practice Tests</p>
+                <p class="text-pink-100/80 text-xs mt-1">Maximum 30 minutes • Maximum 30 questions • Single subject focus</p>
+            </div>
+
+            <!-- Tests List -->
+            <div id="candidate-mini-mocks-container" class="space-y-3">
+                <p class="text-white/60 text-sm text-center py-8">Loading tests...</p>
+            </div>
+        </div>
+    </div>
+
+<!-- ==================== CANDIDATE SECTIONAL TIMER TESTS LIST ==================== -->
+    <div id="candidate-sectional-list" class="hidden fixed inset-0 z-40 overflow-y-auto p-4 pb-8 bg-gradient-to-br from-pink-900 via-rose-800 to-pink-900">
+        <div class="max-w-md mx-auto space-y-4">
+            
+            <!-- Header -->
+            <div class="flex items-center gap-3 pt-2">
+                <button onclick="goBackToCandidateHome()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">⬅️</button>
+                <h2 class="text-xl font-bold text-white">⏳ Sectional Timer Tests</h2>
+            </div>
+
+            <!-- Info Card -->
+            <div class="glass-card p-4 border-l-4 border-purple-400">
+                <p class="text-white text-sm font-semibold">Strict Sectional Timing</p>
+                <p class="text-pink-100/80 text-xs mt-1">You cannot switch sections until the timer ends. Auto-transition to the next section will occur.</p>
+            </div>
+
+            <!-- Tests List -->
+            <div id="candidate-sectional-container" class="space-y-3">
+                <p class="text-white/60 text-sm text-center py-8">Loading tests...</p>
+            </div>
+        </div>
+    </div>
+
+<!-- FIXED BOTTOM NAVIGATION (CANDIDATE) -->
+<div id="candidate-bottom-nav" class="hidden fixed bottom-0 left-0 right-0 bottom-nav p-2 pb-4 z-50">
+    <div class="max-w-md mx-auto flex justify-around items-center">
+        <button onclick="switchCandidateTab('home', this)" class="nav-item active flex flex-col items-center p-2 rounded-xl transition-all w-20">
+            <span class="text-xl">🏠</span>
+            <span class="text-[10px] font-semibold mt-1">Home</span>
+        </button>
+        <button onclick="switchCandidateTab('downloads', this)" class="nav-item flex flex-col items-center p-2 rounded-xl text-pink-100/70 transition-all w-20">
+            <span class="text-xl">📥</span>
+            <span class="text-[10px] font-semibold mt-1">Downloads</span>
+        </button>
+        <<button onclick="showCandidateProfile()" class="nav-item flex flex-col items-center p-2 rounded-xl text-pink-100/70 transition-all w-20">
+    <span class="text-xl">👤</span>
+    <span class="text-[10px] font-semibold mt-1">Profile</span>
+         </button>
+    </div>
+</div>
+
+<!-- FIXED BOTTOM NAVIGATION (ADMIN) -->
+    <div id="admin-bottom-nav" class="hidden fixed bottom-0 left-0 right-0 bottom-nav p-2 pb-4 z-50">
+        <div class="max-w-md mx-auto flex justify-around items-center">
+            <button onclick="switchAdminTab('home', this)" class="nav-item active flex flex-col items-center p-2 rounded-xl transition-all w-20">
+                <span class="text-xl">🏠</span>
+                <span class="text-[10px] font-semibold mt-1">Home</span>
+            </button>
+            <button onclick="switchAdminTab('downloads', this)" class="nav-item flex flex-col items-center p-2 rounded-xl text-pink-100/70 transition-all w-20">
+                <span class="text-xl">📥</span>
+                <span class="text-[10px] font-semibold mt-1">Downloads</span>
+            </button>
+            <button onclick="showAdminProfile()" class="nav-item flex flex-col items-center p-2 rounded-xl text-pink-100/70 transition-all w-20">
+    <span class="text-xl">👤</span>
+    <span class="text-[10px] font-semibold mt-1">Profile</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- ==================== OPTIONAL SUBJECT SELECTION SCREEN ==================== -->
+    <div id="optional-subject-screen" class="hidden fixed inset-0 z-50 optional-subject-screen overflow-y-auto p-6">
+        <div class="max-w-md mx-auto space-y-6">
+            <div class="text-center pt-4">
+                <h2 class="text-2xl font-bold text-gray-800">Select Optional Subject</h2>
+                <p class="text-gray-500 text-sm mt-2">Choose the subject you want to attempt</p>
+            </div>
+            
+            <div id="optional-subjects-list" class="space-y-3">
+                <!-- Optional subjects injected by JS -->
+            </div>
+            
+            <button id="confirm-optional-btn" onclick="confirmOptionalSubject()" class="w-full py-3 bg-pink-700 text-white font-bold rounded-lg hover:bg-pink-800 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Confirm Selection
+            </button>
+            
+            <button onclick="cancelOptionalSelection()" class="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition active:scale-95">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== TEST INFO POPUP ==================== -->
+    <div id="test-info-popup" class="hidden test-info-popup-overlay">
+        <div class="test-info-popup space-y-4">
+            <div class="text-center">
+                <h3 class="text-xl font-bold text-gray-800" id="popup-test-title">Test Title</h3>
+                <p class="text-gray-500 text-sm mt-1">Please read the instructions carefully</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-3 bg-pink-50 border border-pink-200 rounded-lg text-center">
+                    <p class="text-xs text-gray-600">Total Questions</p>
+                    <p class="text-lg font-bold text-pink-700" id="popup-total-q">0</p>
+                </div>
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                    <p class="text-xs text-gray-600">Maximum Marks</p>
+                    <p class="text-lg font-bold text-blue-700" id="popup-max-marks">0</p>
+                </div>
+                <div class="p-3 bg-green-50 border border-green-200 rounded-lg text-center">
+                    <p class="text-xs text-gray-600">Duration</p>
+                    <p class="text-lg font-bold text-green-700" id="popup-duration">0 min</p>
+                </div>
+                <div class="p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
+                    <p class="text-xs text-gray-600">Marking</p>
+                    <p class="text-sm font-bold text-purple-700" id="popup-marking">+2 / -0.5</p>
+                </div>
+            </div>
+            
+            <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">                <p class="text-xs text-yellow-800 font-semibold mb-1">⚠️ Important:</p>
+                <ul class="text-xs text-yellow-700 space-y-1 list-disc list-inside">
+                    <li>Timer starts immediately after clicking Start</li>
+                    <li>Test auto-submits when time expires</li>
+                    <li>You can navigate between questions freely</li>
+                </ul>
+            </div>
+            
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeTestInfoPopup()" class="flex-1 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition active:scale-95">
+                    Cancel
+                </button>
+                <button onclick="startActualTest()" class="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-lg hover:opacity-90 transition active:scale-95">
+                     Start Test
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN TEST INTERFACE (FULL SCREEN) ==================== -->
+<div id="test-interface" class="hidden test-interface">
+    <!-- Header -->
+    <div class="test-header">
+        <div class="test-header-candidate">
+            <span class="test-header-candidate-label">Candidate</span>
+            <span class="test-header-candidate-name" id="test-candidate-name">Name</span>
+        </div>
+        <div class="timer-display" id="timer-display">00:00:00</div>
+    </div>
+    
+    <!-- Subject Tabs -->
+    <div class="subject-tabs-container" id="test-subject-tabs">
+        <!-- Subject tabs injected by JS -->
+    </div>
+    
+    <!-- Question Area (Scrollable) -->
+    <div class="question-area-wrapper">
+        <div class="question-area">
+            <div class="question-header">
+                <div class="question-number-info">
+                    <span class="question-number-label">Question <span id="test-current-q-num">1</span> of <span id="test-total-q-display">0</span></span>
+                    <span class="question-subject-label" id="test-current-subject">Subject</span>
+                </div>
+                <button onclick="reportQuestion()" class="px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition active:scale-95">Report</button>
+            </div>
+            
+            <div id="test-question-content">
+                <!-- Question text and image -->
+            </div>
+            
+            <div id="test-options-container" class="options-container mt-6">
+                <!-- Options injected by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Question Palette Toggle -->
+    <button onclick="toggleQuestionPalette()" class="palette-toggle-btn">☰</button>
+    
+    <!-- Bottom Action Buttons -->
+    <div class="test-bottom-actions">
+        <button onclick="previousQuestion()" class="test-action-btn">⬅️ Previous</button>
+        <button onclick="clearResponse()" class="test-action-btn">️ Clear</button>
+        <button onclick="markForReview()" class="test-action-btn"> Review</button>
+        <button onclick="saveAndNext()" class="test-action-btn primary"> Save & Next</button>
+        <button onclick="submitTest()" class="test-action-btn danger"> Submit</button>
+    </div>
+</div>
+
+    <!-- ==================== QUESTION PALETTE SLIDE ==================== -->
+    <div id="question-palette-overlay" class="question-palette-overlay" onclick="toggleQuestionPalette()"></div>
+    <div id="question-palette-panel" class="question-palette-panel">
+        <div class="palette-header">
+            <h3 class="palette-subject-title" id="palette-subject-title">Subject</h3>
+            <button onclick="toggleQuestionPalette()" class="palette-close-btn"></button>
+        </div>
+        
+        <div id="palette-questions-grid" class="palette-grid">
+            <!-- Question number buttons injected by JS -->
+        </div>
+        
+        <div class="palette-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #2563eb;"></div>
+                <span>Answered</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #9ca3af;"></div>
+                <span>Not Visited</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #dc2626;"></div>
+                <span>Not Answered</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #7c3aed;"></div>
+                <span>Marked for Review</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== RESULT SCREEN ==================== -->
+    <div id="result-screen" class="hidden fixed inset-0 z-50 bg-gray-50 overflow-y-auto pb-20">
+        
+        <!-- Top Header -->
+        <div class="bg-white p-4 shadow-sm sticky top-0 z-10">
+            <div class="flex items-center justify-between mb-2">
+                <button onclick="exitResultScreen()" class="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition">
+                    ⬅️
+                </button>
+                <div class="text-center flex-1">
+                    <h2 class="text-lg font-bold text-gray-800" id="result-exam-name">Exam Name</h2>
+                    <p class="text-xs text-gray-500" id="result-candidate-name">Candidate Name</p>
+                </div>
+                <div class="w-10"></div> <!-- Spacer for centering -->
+            </div>
+            
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 mt-2">
+                <button onclick="switchResultTab('overview')" class="result-tab active flex-1 py-3 text-sm font-semibold text-pink-700 border-b-2 border-pink-700">Overview</button>
+                <button onclick="switchResultTab('correct')" class="result-tab flex-1 py-3 text-sm font-semibold text-gray-500">Correct</button>
+                <button onclick="switchResultTab('incorrect')" class="result-tab flex-1 py-3 text-sm font-semibold text-gray-500">Incorrect</button>
+                <button onclick="switchResultTab('unattempted')" class="result-tab flex-1 py-3 text-sm font-semibold text-gray-500">Unattempted</button>
+            </div>
+        </div>
+
+        <!-- TAB 1: OVERVIEW -->
+        <div id="tab-overview" class="result-tab-content p-4 space-y-4">
+            <!-- Score Card -->
+            <div class="bg-white rounded-xl p-6 shadow-sm text-center border-l-4 border-pink-600">
+                <p class="text-sm text-gray-500 font-medium">Your Score</p>
+                <h1 class="text-4xl font-bold text-gray-800 mt-1"><span id="res-score">0</span> <span class="text-lg text-gray-400">/ <span id="res-max-marks">0</span></span></h1>
+                <p id="res-cut-off-msg" class="text-sm font-semibold mt-2 text-green-600">Calculating...</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-3 gap-3">
+                <div class="bg-white p-3 rounded-xl shadow-sm text-center">
+                    <p class="text-xs text-gray-500">Rank</p>
+                    <p class="text-lg font-bold text-gray-800" id="res-rank">-</p>
+                </div>
+                <div class="bg-white p-3 rounded-xl shadow-sm text-center">
+                    <p class="text-xs text-gray-500">Percentile</p>
+                    <p class="text-lg font-bold text-blue-600" id="res-percentile">-</p>
+                </div>
+                <div class="bg-white p-3 rounded-xl shadow-sm text-center">
+                    <p class="text-xs text-gray-500">Accuracy</p>
+                    <p class="text-lg font-bold text-purple-600" id="res-accuracy">-</p>
+                </div>
+            </div>
+            <!-- Summary Cards -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                    <span class="font-semibold text-gray-700">Question Stats</span>
+                    <span class="text-xs text-gray-400" id="res-total-q-stats">0 Questions</span>
+                </div>
+                <div class="p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">✔</div>
+                            <span class="text-gray-700">Correct</span>
+                        </div>
+                        <span class="font-bold text-gray-800" id="res-correct-count">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">✖</div>
+                            <span class="text-gray-700">Incorrect</span>
+                        </div>
+                        <span class="font-bold text-gray-800" id="res-incorrect-count">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">-</div>
+                            <span class="text-gray-700">Unattempted</span>
+                        </div>
+                        <span class="font-bold text-gray-800" id="res-unattempted-count">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 pt-2">
+                <button onclick="shareResult()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                    🔗 Share Result
+                </button>
+                <button onclick="downloadResultPDF()" class="flex-1 py-3 bg-gray-800 text-white font-bold rounded-xl hover:bg-gray-900 transition flex items-center justify-center gap-2">
+                    📄 Download PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 2: CORRECT -->
+        <div id="tab-correct" class="result-tab-content hidden p-4 space-y-4">
+            <div id="correct-questions-list" class="space-y-4"></div>
+        </div>
+
+        <!-- TAB 3: INCORRECT -->
+        <div id="tab-incorrect" class="result-tab-content hidden p-4 space-y-4">
+            <div id="incorrect-questions-list" class="space-y-4"></div>        </div>
+
+        <!-- TAB 4: UNATTEMPTED -->
+        <div id="tab-unattempted" class="result-tab-content hidden p-4 space-y-4">
+            <div id="unattempted-questions-list" class="space-y-4"></div>
+        </div>
+    </div>
+    
+    <!-- ==================== ADMIN MINI MOCK - SCREEN 1 ==================== -->
+    <div id="admin-mini-mock-screen1" class="hidden fixed inset-0 z-40 overflow-y-auto mini-mock-theme p-4 pb-8">
+        <div class="max-w-md mx-auto">
+            <!-- Header -->
+            <div class="flex items-center gap-3 pt-2 mb-6">
+                <button onclick="goBackToAdminHome()" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition">⬅️</button>
+                <h2 class="text-xl font-bold text-gray-800">Create Mini Mock Test</h2>
+            </div>
+
+            <!-- Form Card -->
+            <div class="white-card space-y-4">
+                <div>
+                    <label class="white-label">Exam Title</label>
+                    <input type="text" id="mini-title" placeholder="e.g., Math Quick Test" class="white-input">
+                </div>
+
+                <div>
+                    <label class="white-label">Subject (Only One)</label>
+                    <input type="text" id="mini-subject" placeholder="e.g., Mathematics" class="white-input">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="white-label">No. of Questions (Max 30)</label>
+                        <input type="number" id="mini-questions" max="30" placeholder="30" class="white-input">
+                    </div>
+                    <div>
+                        <label class="white-label">Duration (Max 30 min)</label>
+                        <input type="number" id="mini-duration" max="30" placeholder="30" class="white-input">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="white-label">Maximum Marks</label>
+                    <input type="number" id="mini-max-marks" placeholder="100" class="white-input">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="white-label">Correct Marks</label>
+                        <input type="number" step="0.01" id="mini-right-marks" placeholder="4" class="white-input">
+                    </div>
+                    <div>
+                        <label class="white-label">Negative Marks</label>
+                        <input type="number" step="0.01" id="mini-negative-marks" placeholder="1" class="white-input">
+                    </div>
+                </div>
+
+                <button onclick="handleMiniMockScreen1Submit()" class="white-btn-primary mt-4">Save & Next ➡️</button>
+            </div>        </div>
+    </div>
+
+    <!-- ==================== ADMIN MINI MOCK - SCREEN 2 (QUESTIONS) ==================== -->
+    <div id="admin-mini-mock-screen2" class="hidden fixed inset-0 z-40 overflow-y-auto mini-mock-theme p-4 pb-24">
+        <div class="max-w-md mx-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between pt-2 mb-4">
+                <button onclick="goBackToMiniMockScreen1()" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition">⬅️</button>
+                <h2 class="text-lg font-bold text-gray-800" id="mini-screen2-subject-header">Subject</h2>
+                <div class="w-10"></div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="white-card p-3 flex justify-between items-center mb-4">
+                <span class="text-sm font-semibold text-gray-600">Progress</span>
+                <span class="text-sm font-bold text-blue-600"><span id="mini-q-count">0</span> / <span id="mini-q-total">0</span></span>
+            </div>
+
+            <!-- Question Form -->
+            <div class="white-card space-y-4">
+                <div>
+                    <label class="white-label">Question <span id="mini-current-q-num" class="text-blue-600">#1</span></label>
+                    <textarea id="mini-question-text" rows="3" placeholder="Type question here..." class="white-input resize-none"></textarea>
+                    <label class="white-image-upload">
+                        📷 Add Image
+                        <input type="file" accept="image/*" onchange="handleMiniImageUpload(event, 'mini-q-img')" class="hidden">
+                    </label>
+                    <div id="mini-q-img-preview" class="mt-2"></div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="white-label">Options (Select correct answer)</label>
+                    
+                    <!-- Option A -->
+                    <div class="flex items-start gap-2">
+                        <input type="radio" name="mini-correct-opt" value="0" checked class="mt-3 w-5 h-5 accent-blue-600">
+                        <div class="flex-1">
+                            <input type="text" id="mini-opt-0" placeholder="Option A" class="white-input">
+                            <label class="white-image-upload">
+                                📷 Image
+                                <input type="file" accept="image/*" onchange="handleMiniImageUpload(event, 'mini-opt-0-img')" class="hidden">
+                            </label>
+                            <div id="mini-opt-0-img-preview" class="mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Option B -->
+                    <div class="flex items-start gap-2">
+                        <input type="radio" name="mini-correct-opt" value="1" class="mt-3 w-5 h-5 accent-blue-600">                        <div class="flex-1">
+                            <input type="text" id="mini-opt-1" placeholder="Option B" class="white-input">
+                            <label class="white-image-upload">
+                                📷 Image
+                                <input type="file" accept="image/*" onchange="handleMiniImageUpload(event, 'mini-opt-1-img')" class="hidden">
+                            </label>
+                            <div id="mini-opt-1-img-preview" class="mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Option C -->
+                    <div class="flex items-start gap-2">
+                        <input type="radio" name="mini-correct-opt" value="2" class="mt-3 w-5 h-5 accent-blue-600">
+                        <div class="flex-1">
+                            <input type="text" id="mini-opt-2" placeholder="Option C" class="white-input">
+                            <label class="white-image-upload">
+                                📷 Image
+                                <input type="file" accept="image/*" onchange="handleMiniImageUpload(event, 'mini-opt-2-img')" class="hidden">
+                            </label>
+                            <div id="mini-opt-2-img-preview" class="mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Option D -->
+                    <div class="flex items-start gap-2">
+                        <input type="radio" name="mini-correct-opt" value="3" class="mt-3 w-5 h-5 accent-blue-600">
+                        <div class="flex-1">
+                            <input type="text" id="mini-opt-3" placeholder="Option D" class="white-input">
+                            <label class="white-image-upload">
+                                📷 Image
+                                <input type="file" accept="image/*" onchange="handleMiniImageUpload(event, 'mini-opt-3-img')" class="hidden">
+                            </label>
+                            <div id="mini-opt-3-img-preview" class="mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="saveMiniMockQuestion()" class="white-btn-primary mt-2">💾 Save Question & Add Next</button>
+            </div>
+
+            <!-- Publish Button -->
+            <button id="mini-publish-btn" onclick="publishMiniMock()" class="hidden white-btn-primary mt-4 bg-green-600 hover:bg-green-700"> Publish Mini Mock Test</button>
+        </div>
+    </div>
+    
+    <!-- ==================== ADMIN SECTIONAL TIMER - SCREEN 1 ==================== -->
+    <div id="admin-sectional-screen1" class="hidden fixed inset-0 z-40 overflow-y-auto mini-mock-theme p-4 pb-8">
+        <div class="max-w-md mx-auto">
+            <div class="flex items-center gap-3 pt-2 mb-6">
+                <button onclick="goBackToAdminHome()" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition">⬅️</button>
+                <h2 class="text-xl font-bold text-gray-800">Create Sectional Test</h2>
+            </div>
+
+            <div class="white-card space-y-4">
+                <div>
+                    <label class="white-label">Exam Name (Block Letters)</label>
+                    <input type="text" id="sec-title" placeholder="SSC CGL TIER 1" class="white-input uppercase-input">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="white-label">Total Questions</label>
+                        <input type="number" id="sec-questions" placeholder="100" class="white-input">
+                    </div>
+                    <div>
+                        <label class="white-label">Total Duration (Mins)</label>
+                        <input type="number" id="sec-duration" placeholder="60" class="white-input">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="white-label">Maximum Marks</label>
+                    <input type="number" id="sec-max-marks" placeholder="200" class="white-input">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="white-label">Correct Marks</label>
+                        <input type="number" step="0.01" id="sec-right-marks" placeholder="2" class="white-input">
+                    </div>
+                    <div>
+                        <label class="white-label">Negative Marks</label>
+                        <input type="number" step="0.01" id="sec-negative-marks" placeholder="0.5" class="white-input">
+                    </div>
+                </div>
+
+                <!-- Dynamic Sectional Subjects -->
+                <div>
+                    <label class="white-label">Subjects & Sectional Timers</label>
+                    <div id="sectional-subjects-list" class="mt-2">
+                        <p class="text-xs text-gray-500 text-center py-2">No sections added yet.</p>
+                    </div>
+                    
+                    <div class="add-section-form">
+                        <input type="text" id="new-sec-name" placeholder="Subject Name" class="white-input">                        <input type="number" id="new-sec-time" placeholder="Mins" class="white-input" style="max-width: 80px;">
+                        <button onclick="addSectionalSubject()" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-lg">+</button>
+                    </div>
+                    <p id="sec-time-error" class="text-xs text-red-500 mt-2 hidden">Total section time must match total duration!</p>
+                </div>
+
+                <button onclick="handleSectionalScreen1Submit()" class="white-btn-primary mt-4">Save & Next ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ADMIN SECTIONAL TIMER - SCREEN 2 ==================== -->
+    <div id="admin-sectional-screen2" class="hidden fixed inset-0 z-40 overflow-y-auto mini-mock-theme p-4 pb-24">
+        <div class="max-w-md mx-auto">
+            <!-- Header with Subject Tabs -->
+            <div class="flex items-center justify-between pt-2 mb-2">
+                <button onclick="goBackToSectionalScreen1()" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition">⬅️</button>
+                <h2 class="text-sm font-bold text-gray-800">Questions Builder</h2>
+                <div class="w-10"></div>
+            </div>
+
+            <!-- Subject Tabs (Scrollable) -->
+            <div id="sectional-subject-tabs" class="flex gap-2 overflow-x-auto pb-3 mb-4">
+                <!-- Tabs injected by JS -->
+            </div>
+
+            <!-- Progress -->
+            <div class="white-card p-3 flex justify-between items-center mb-4">
+                <span class="text-sm font-semibold text-gray-600">Progress</span>
+                <span class="text-sm font-bold text-blue-600"><span id="sec-q-count">0</span> / <span id="sec-q-total">0</span></span>
+            </div>
+
+            <!-- Question Form -->
+            <div class="white-card space-y-4">
+                <div>
+                    <label class="white-label">Question <span id="sec-current-q-num" class="text-blue-600">#1</span></label>
+                    <textarea id="sec-question-text" rows="3" placeholder="Type question here..." class="white-input resize-none"></textarea>
+                    <label class="white-image-upload">
+                        📷 Add Image
+                        <input type="file" accept="image/*" onchange="handleSecImageUpload(event, 'sec-q-img')" class="hidden">
+                    </label>
+                    <div id="sec-q-img-preview" class="mt-2"></div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="white-label">Options (Select correct answer)</label>
+                    
+                    <!-- Options A, B, C, D -->
+                    <div class="flex items-start gap-2">
+                        <input type="radio" name="sec-correct-opt" value="0" checked class="mt-3 w-5 h-5 accent-blue-600">                        <div class="flex-1">
+                            <input type="text" id="sec-opt-0" placeholder="Option A" class="white-input">
+                            <label class="white-image-upload">📷 Image<input type="file" accept="image/*" onchange="handleSecImageUpload(event, 'sec-opt-0-img')" class="hidden"></label>
+                            <div id="sec-opt-0-img-preview" class="mt-1"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <input type="radio" name="sec-correct-opt" value="1" class="mt-3 w-5 h-5 accent-blue-600">
+                        <div class="flex-1">
+                            <input type="text" id="sec-opt-1" placeholder="Option B" class="white-input">
+                            <label class="white-image-upload">📷 Image<input type="file" accept="image/*" onchange="handleSecImageUpload(event, 'sec-opt-1-img')" class="hidden"></label>
+                            <div id="sec-opt-1-img-preview" class="mt-1"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <input type="radio" name="sec-correct-opt" value="2" class="mt-3 w-5 h-5 accent-blue-600">
+                        <div class="flex-1">
+                            <input type="text" id="sec-opt-2" placeholder="Option C" class="white-input">
+                            <label class="white-image-upload">📷 Image<input type="file" accept="image/*" onchange="handleSecImageUpload(event, 'sec-opt-2-img')" class="hidden"></label>
+                            <div id="sec-opt-2-img-preview" class="mt-1"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <input type="radio" name="sec-correct-opt" value="3" class="mt-3 w-5 h-5 accent-blue-600">
+                        <div class="flex-1">
+                            <input type="text" id="sec-opt-3" placeholder="Option D" class="white-input">
+                            <label class="white-image-upload">📷 Image<input type="file" accept="image/*" onchange="handleSecImageUpload(event, 'sec-opt-3-img')" class="hidden"></label>
+                            <div id="sec-opt-3-img-preview" class="mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="saveSectionalQuestion()" class="white-btn-primary mt-2">💾 Save Question & Add Next</button>
+            </div>
+
+            <!-- Publish Button -->
+            <button id="sec-publish-btn" onclick="publishSectionalTest()" class="hidden white-btn-primary mt-4 bg-green-600 hover:bg-green-700"> Publish Sectional Test</button>
+        </div>
+
+        <!-- Preview Toggle Button -->
+        <button onclick="toggleSectionalPreview()" class="preview-toggle-btn">👁️</button>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="sectional-preview-modal" class="hidden preview-modal-overlay">
+        <div class="preview-modal">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="font-bold text-gray-800">Questions Preview</h3>
+                <button onclick="toggleSectionalPreview()" class="text-red-500 font-bold text-xl">✕</button>
+            </div>            <div id="sectional-preview-content" class="space-y-4">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== ADMIN NOTIFICATION SCREEN ==================== -->
+    <div id="admin-notification-screen" class="hidden fixed inset-0 z-40 overflow-y-auto mini-mock-theme p-4 pb-8">
+        <div class="max-w-md mx-auto">
+            <!-- Header -->
+            <div class="flex items-center gap-3 pt-2 mb-6">
+                <button onclick="goBackToAdminHome()" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition">⬅️</button>
+                <h2 class="text-xl font-bold text-gray-800">Send Notification</h2>
+            </div>
+
+            <!-- Form Card -->
+            <div class="white-card space-y-4">
+                <div>
+                    <label class="white-label">Notification Title (Block Letters)</label>
+                    <input type="text" id="notif-title" placeholder="IMPORTANT UPDATE" class="white-input uppercase-input">
+                </div>
+
+                <div>
+                    <label class="white-label">Notification Body</label>
+                    <textarea id="notif-body" rows="5" placeholder="Type your message here..." class="white-input resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="white-label">Attach PDF (Optional)</label>
+                    <label class="white-image-upload w-full justify-center cursor-pointer">
+                        📄 Upload PDF
+                        <input type="file" accept="application/pdf" onchange="handleNotifPdfUpload(event)" class="hidden">
+                    </label>
+                    <div id="notif-pdf-preview" class="mt-2 text-sm text-gray-600"></div>
+                    <p class="text-xs text-gray-400 mt-1">Max size: 8MB</p>
+                </div>
+
+                <button onclick="sendNotification()" id="send-notif-btn" class="white-btn-primary mt-4 bg-purple-600 hover:bg-purple-700"> Send Notification</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== CANDIDATE NOTIFICATIONS LIST ==================== -->
+    <div id="candidate-notif-list" class="hidden fixed inset-0 z-40 overflow-y-auto p-4 pb-8 bg-gradient-to-br from-pink-900 via-rose-800 to-pink-900">
+        <div class="max-w-md mx-auto space-y-4">
+            <div class="flex items-center gap-3 pt-2">
+                <button onclick="goBackToCandidateHome()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">⬅️</button>
+                <h2 class="text-xl font-bold text-white">🔔 Notifications</h2>
+            </div>
+            <div id="candidate-notif-container" class="space-y-3">
+                <p class="text-white/60 text-sm text-center py-8">Loading notifications...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CANDIDATE DOWNLOADS SCREEN ==================== -->
+    <div id="candidate-downloads-screen" class="hidden fixed inset-0 z-40 overflow-y-auto p-4 pb-8 bg-gradient-to-br from-pink-900 via-rose-800 to-pink-900">
+        <div class="max-w-md mx-auto space-y-4">
+            <div class="flex items-center gap-3 pt-2">
+                <button onclick="closeDownloadsScreen()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">⬅️</button>
+                <h2 class="text-xl font-bold text-white">📥 Downloads</h2>
+            </div>
+            <div class="glass-card p-4 border-l-4 border-blue-400">
+                <p class="text-white text-sm font-semibold">Your Downloaded PDFs</p>
+                <p class="text-pink-100/80 text-xs mt-1">Files saved locally on your device.</p>
+            </div>
+            <div id="downloads-container" class="space-y-3">
+                <!-- Downloaded items injected by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== ADMIN PROFILE SCREEN ==================== -->
+    <div id="admin-profile-screen" class="hidden fixed inset-0 z-40 overflow-y-auto admin-profile-theme p-4 pb-24">
+        <div class="max-w-md mx-auto">
+            <!-- Header -->
+            <div class="flex items-center gap-3 pt-2 mb-4">
+                <button onclick="goBackToAdminHome()" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition shadow-sm">⬅️</button>
+                <h2 class="text-xl font-bold text-gray-800">Admin Control Panel</h2>
+            </div>
+
+            <!-- 1. Profile Section -->
+            <div class="profile-header-card">
+                <div class="profile-avatar">👤</div>
+                <h3 class="text-xl font-bold" id="prof-admin-name">Admin Name</h3>
+                <p class="text-pink-100 text-sm mt-1" id="prof-admin-email">admin@mockprep.com</p>
+                <p class="text-pink-200 text-xs mt-2">Joined: <span id="prof-admin-date">-</span></p>
+                <div class="flex gap-3 mt-4 justify-center">
+                    <button onclick="alert('Edit Profile feature coming soon!')" class="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-sm font-semibold hover:bg-white/30 transition">Edit Profile</button>
+                    <button onclick="alert('Change Password feature coming soon!')" class="px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-sm font-semibold hover:bg-white/30 transition">Change Password</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats (Real-time) -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="stat-box">
+                    <div class="stat-number" id="stat-total-users">0</div>
+                    <div class="stat-label">Total Registered Users</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="stat-active-tests">0</div>
+                    <div class="stat-label">Active Mock Tests</div>
+                </div>
+            </div>
+
+            <!-- 2. Active Mock Tests -->
+            <div class="glass-white-card">
+                <div class="section-title">📝 Active Mock Tests</div>
+                <div id="admin-active-tests-list" class="space-y-2">
+                    <p class="text-sm text-gray-500 text-center py-2">Loading...</p>
+                </div>
+            </div>
+
+            <!-- 3. Notifications Released -->
+            <div class="glass-white-card">
+                <div class="section-title">🔔 Notifications Released</div>
+                <div id="admin-notifications-list" class="space-y-2">
+                    <p class="text-sm text-gray-500 text-center py-2">Loading...</p>
+                </div>
+            </div>
+
+            <!-- 4. Registered Users & Performance -->
+            <div class="glass-white-card">
+                <div class="section-title">📊 Today's Performance</div>
+                <div class="flex justify-between items-center p-3 bg-white/50 rounded-lg mb-3">
+                    <span class="text-sm text-gray-600">Tests Attempted Today</span>
+                    <span class="font-bold text-pink-700 text-lg" id="stat-today-attempts">0</span>
+                </div>
+                <div class="section-title mt-4"> Registered Users</div>
+                <div id="admin-users-list" class="space-y-2">
+                    <p class="text-sm text-gray-500 text-center py-2">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== CANDIDATE PROFILE SCREEN ==================== -->
+    <div id="candidate-profile-screen" class="hidden fixed inset-0 z-40 overflow-y-auto candidate-profile-theme p-4 pb-24">
+        <div class="max-w-md mx-auto">
+            <!-- Header -->
+            <div class="flex items-center gap-3 pt-2 mb-4">
+                <button onclick="goBackToCandidateHome()" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition shadow-sm">⬅️</button>
+                <h2 class="text-xl font-bold text-gray-800">My Profile</h2>
+            </div>
+
+            <!-- 1. ACCOUNT SECTION -->
+            <div class="profile-header-card">
+                <div class="profile-image-upload" onclick="document.getElementById('profile-image-input').click()">
+                    <img id="profile-image-preview" src="" alt="Profile" style="display: none;">
+                    <span id="profile-image-placeholder" class="text-3xl">📷</span>
+                </div>
+                <input type="file" id="profile-image-input" accept="image/*" onchange="handleProfileImageUpload(event)" class="hidden">
+                <h3 class="text-xl font-bold mt-3" id="cand-profile-name">Candidate Name</h3>
+                <p class="text-pink-100 text-sm mt-1" id="cand-profile-email">candidate@mockprep.com</p>
+                <p class="text-pink-200 text-xs mt-2">Joined: <span id="cand-profile-date">-</span></p>
+            </div>
+
+            <div class="glass-white-card">
+                <div class="section-title">👤 Account Details</div>
+                
+                <div class="profile-field">
+                    <div class="flex-1">
+                        <div class="profile-field-label">Full Name</div>
+                        <div class="profile-field-value" id="cand-name-display">Loading...</div>
+                    </div>
+                    <button onclick="editCandidateName()" class="edit-icon">✏️</button>
+                </div>
+
+                <div class="profile-field">
+                    <div class="flex-1">
+                        <div class="profile-field-label">Email ID</div>
+                        <div class="profile-field-value" id="cand-email-display">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="profile-field">
+                    <div class="flex-1">
+                        <div class="profile-field-label">Mobile Number (Optional)</div>
+                        <div class="profile-field-value" id="cand-mobile-display">Not Added</div>
+                    </div>
+                    <button onclick="editCandidateMobile()" class="edit-icon">✏️</button>
+                </div>
+
+                <button onclick="changeCandidatePassword()" class="w-full py-3 bg-pink-700 text-white font-semibold rounded-lg mt-3 hover:bg-pink-800 transition">🔒 Change Password</button>
+            </div>
+            <!-- 2. TOTAL ATTEMPTED TESTS -->
+            <div class="glass-white-card">
+                <div class="section-title">📊 Total Attempted Tests</div>
+                <div class="stat-box mb-3">
+                    <div class="stat-number" id="cand-total-attempts">0</div>
+                    <div class="stat-label">Tests Completed</div>
+                </div>
+                <div id="cand-attempts-list" class="space-y-2">
+                    <p class="text-sm text-gray-500 text-center py-2">No attempts yet.</p>
+                </div>
+            </div>
+
+            <!-- 3. MY TESTS - PREVIOUS ATTEMPTS -->
+            <div class="glass-white-card">
+                <div class="section-title">📝 My Tests - Previous Attempts</div>
+                <div id="cand-previous-attempts-list" class="space-y-3">
+                    <p class="text-sm text-gray-500 text-center py-2">No previous attempts.</p>
+                </div>
+            </div>
+
+            <!-- 4. SETTINGS -->
+            <div class="glass-white-card">
+                <div class="section-title">⚙️ Settings</div>
+                
+                <div class="subsection-title text-xs font-bold text-gray-500 uppercase mt-3 mb-2">Preferences</div>
+                
+                <div class="settings-toggle">
+                    <div>
+                        <div class="font-semibold text-gray-800 text-sm">Dark Mode</div>
+                        <div class="text-xs text-gray-500">Switch to dark theme</div>
+                    </div>
+                    <div id="dark-mode-toggle" class="toggle-switch" onclick="toggleDarkMode()"></div>
+                </div>
+
+                <div class="settings-toggle">
+                    <div>
+                        <div class="font-semibold text-gray-800 text-sm">Font Size</div>
+                        <div class="text-xs text-gray-500">Current: <span id="current-font-size">Medium</span></div>
+                    </div>
+                    <button onclick="changeFontSize()" class="edit-icon">🔤</button>
+                </div>
+
+                <div class="subsection-title text-xs font-bold text-gray-500 uppercase mt-4 mb-2">Security</div>
+
+                <div class="settings-toggle">
+                    <div>
+                        <div class="font-semibold text-gray-800 text-sm">Login Devices</div>
+                        <div class="text-xs text-gray-500">1 active device</div>
+                    </div>
+                </div>
+                <button onclick="logoutFromAllDevices()" class="w-full py-3 bg-red-600 text-white font-semibold rounded-lg mt-3 hover:bg-red-700 transition">🚪 Logout from All Devices</button>
+            </div>
+
+            <!-- 5. HELPDESK -->
+            <div class="glass-white-card">
+                <div class="section-title">💬 HelpDesk</div>
+                
+                <div class="settings-toggle">
+                    <div>
+                        <div class="font-semibold text-gray-800 text-sm">FAQs</div>
+                        <div class="text-xs text-gray-500">Frequently Asked Questions</div>
+                    </div>
+                    <button onclick="alert('🚧 FAQs section is coming soon!')" class="edit-icon">📖</button>
+                </div>
+
+                <div class="settings-toggle">
+                    <div>
+                        <div class="font-semibold text-gray-800 text-sm">Contact Support</div>
+                        <div class="text-xs text-gray-500">Get help from our team</div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg mt-3">
+                    <p class="text-xs text-blue-700 font-semibold mb-1">📧 Support Email:</p>
+                    <a href="mailto:heartdevil854@gmail.com" class="text-sm text-blue-600 font-bold hover:underline">heartdevil854@gmail.com</a>
+                </div>
+            </div>
+
+            <!-- DEVELOPER TAGLINE -->
+            <div class="developer-tagline">
+                Developed By JOYDEEP and MockPrep Team
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
