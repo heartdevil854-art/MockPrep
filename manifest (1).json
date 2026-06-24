@@ -1,0 +1,11 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "mock-prep-sage.vercel",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "mock-prep-sage.vercel",
+  "start_url": "/index.html",
+  "theme_color": "#ffffff"
+}
