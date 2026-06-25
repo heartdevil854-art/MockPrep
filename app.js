@@ -4,7 +4,13 @@
 const SUPABASE_URL = 'https://waftghfabhpztkyrbzzp.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndhZnRnaGZhYmhwenRreXJienpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4ODQzMzIsImV4cCI6MjA5NzQ2MDMzMn0.k-94kVewD_v-4d1nuKC-_UryGAvL62WibTctt3ltVKQ';
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false
+    }
+});
 
 let currentCaptcha = '';
 let isLoginMode = true;
@@ -208,19 +214,35 @@ function showCreateTestScreen1() {
 }
 
 function goBackToAdminHome() {
-    // Hide ALL admin sub-screens (including the new Profile screen)
-    document.getElementById('admin-create-test-screen1').classList.add('hidden');
-    document.getElementById('admin-create-test-screen2').classList.add('hidden');
-    document.getElementById('admin-mini-mock-screen1').classList.add('hidden');
-    document.getElementById('admin-mini-mock-screen2').classList.add('hidden');
-    document.getElementById('admin-sectional-screen1').classList.add('hidden');
-    document.getElementById('admin-sectional-screen2').classList.add('hidden');
-    document.getElementById('admin-notification-screen').classList.add('hidden');
-    document.getElementById('admin-profile-screen').classList.add('hidden'); // <-- THIS WAS MISSING!
+    alert('Function called!'); // Debug alert
     
-    // Show Dashboard
-    document.getElementById('admin-dashboard').classList.remove('hidden');
-    document.getElementById('admin-bottom-nav').classList.remove('hidden');
+    // Hide ALL admin screens
+    const screens = [
+        'admin-create-test-screen1',
+        'admin-create-test-screen2',
+        'admin-mini-mock-screen1',
+        'admin-mini-mock-screen2',
+        'admin-sectional-screen1',
+        'admin-sectional-screen2',
+        'admin-notification-screen',
+        'admin-profile-screen'
+    ];
+    
+    screens.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.classList.add('hidden');
+        }
+    });
+    
+    // Show dashboard
+    var dashboard = document.getElementById('admin-dashboard');
+    var nav = document.getElementById('admin-bottom-nav');
+    
+    if (dashboard) dashboard.classList.remove('hidden');
+    if (nav) nav.classList.remove('hidden');
+    
+    alert('Back to home complete!');
 }
 
 // --- SCREEN 1 FORM HANDLER ---
@@ -3269,8 +3291,40 @@ function loadUserPreferences() {
     if (fontSizeDisplay) fontSizeDisplay.innerText = fontSize;
 }
 
-// Call this when app loads
-document.addEventListener('DOMContentLoaded', loadUserPreferences);
+// =============================================
+// PERSISTENT LOGIN (AUTO-LOGIN)
+// =============================================
+async function autoLogin() {
+    // 1. Check if a session already exists in the browser/app
+    const { data: { session } } = await db.auth.getSession();
+    
+    // 2. If session exists, the user is already logged in!
+    if (session) {
+        // Fetch their profile to get their role and name
+        const { data: profile } = await db
+            .from('profiles')
+            .select('role, full_name')
+            .eq('id', session.user.id)
+            .single();
+        
+        if (profile) {
+            // Hide the login screen
+            document.getElementById('auth-container').classList.add('hidden');
+            
+            // Automatically show the correct dashboard
+            showDashboard(profile.role, profile.full_name);
+        }
+    } else {
+        // No session found, show the login screen (default behavior)
+        generateCaptcha();
+    }
+}
+
+// Run this when the app loads
+document.addEventListener('DOMContentLoaded', () => {
+    autoLogin();
+    loadUserPreferences(); // Loads dark mode/font size if you added it
+});
 
 // =============================================
 // INIT
