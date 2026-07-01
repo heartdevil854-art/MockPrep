@@ -77,12 +77,12 @@
     <!-- 3x2 Category Grid -->
     <div class="grid grid-cols-3 gap-3">
         <!-- 1. Free Mock Test -->
-<div onclick="showCreateTestScreen1()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+<div onclick="handleTabClick('free_mock')" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
     <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">📝</div>
     <span class="text-white text-[11px] font-medium text-center leading-tight">Free Mock Test</span>
 </div>
         <!-- 2. Mini Mock Test -->
-<div onclick="showAdminMiniMockScreen1()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+<div onclick="handleTabClick('mini_mock')" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
     <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">⏱️</div>
     <span class="text-white text-[11px] font-medium text-center leading-tight">Mini Mock Test</span>
 </div>
@@ -92,7 +92,7 @@
     <span class="text-white text-[11px] font-medium text-center leading-tight">Notifications</span>
 </div>
         <!-- 4. Sectional Timer -->
-<div onclick="showAdminSectionalScreen1()" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
+<div onclick="handleTabClick('sectional_timer')" class="flex flex-col items-center space-y-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition cursor-pointer active:scale-95">
     <div class="w-14 h-14 flex items-center justify-center bg-white/20 rounded-full text-2xl">⏳</div>
     <span class="text-white text-[11px] font-medium text-center leading-tight">Sectional Timer</span>
 </div>
@@ -200,7 +200,7 @@
             
             <!-- Header with Back & Toggle -->
             <div class="flex items-center justify-between pt-2">
-                <button onclick="goBackToScreen1()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">⬅️</button>
+                <button onclick="promptSaveDraft('free_mock')" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95">⬅️</button>
                 <h2 class="text-lg font-bold text-white flex-1 text-center">Questions Builder</h2>
                 <button onclick="toggleSlidePanel()" class="p-2 bg-white/10 border border-white/20 rounded-full text-white hover:bg-white/20 transition active:scale-95" title="View Questions">📋</button>
             </div>
@@ -798,7 +798,7 @@
         <div class="max-w-md mx-auto">
             <!-- Header -->
             <div class="flex items-center justify-between pt-2 mb-4">
-                <button onclick="goBackToMiniMockScreen1()" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition">⬅️</button>
+                <button onclick="promptSaveDraft('mini_mock')" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition">⬅️</button>
                 <h2 class="text-lg font-bold text-gray-800" id="mini-screen2-subject-header">Subject</h2>
                 <div class="w-10"></div>
             </div>
@@ -949,7 +949,7 @@
         <div class="max-w-md mx-auto">
             <!-- Header with Subject Tabs -->
             <div class="flex items-center justify-between pt-2 mb-2">
-                <button onclick="goBackToSectionalScreen1()" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition">⬅️</button>
+                <button onclick="promptSaveDraft('sectional_timer')" class="p-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition">⬅️</button>
                 <h2 class="text-sm font-bold text-gray-800">Questions Builder</h2>
                 <div class="w-10"></div>
             </div>
@@ -1298,6 +1298,27 @@
             <div class="developer-tagline">
                 Developed By JOYDEEP and MockPrep Team
             </div>
+        </div>
+    </div>
+    
+    <!-- ==================== ADMIN DRAFT SELECTION POPUP ==================== -->
+    <div id="admin-draft-screen" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
+            <div class="text-4xl">📝</div>
+            <h3 class="text-xl font-bold text-gray-800">Draft Found!</h3>
+            <p class="text-gray-500 text-sm">You have an unsaved draft for this test type. What would you like to do?</p>
+            
+            <button onclick="continueDraft()" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                ▶️ Continue Draft
+            </button>
+            
+            <button onclick="createNewTest()" class="w-full py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition flex items-center justify-center gap-2">
+                ➕ Create New Test
+            </button>
+            
+            <button onclick="closeDraftScreen()" class="w-full py-2 text-gray-400 text-sm hover:text-gray-600 transition">
+                Cancel
+            </button>
         </div>
     </div>
     <script src="app.js"></script>

@@ -3327,6 +3327,210 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================
+// DRAFT MANAGEMENT LOGIC
+// =============================================
+let currentCreatingType = null;
+let currentDraftId = null;
+
+async function handleTabClick(testType) {
+    currentCreatingType = testType;
+    try {
+        const { data, error } = await db.from('tests').select('*').eq('test_type', testType).eq('is_published', false).order('created_at', { ascending: false }).limit(1);
+        if (data && data.length > 0) {
+            currentDraftId = data[0].id;
+            window.draftData = data[0]; 
+            document.getElementById('admin-draft-screen').classList.remove('hidden');
+        } else {
+            navigateToScreen1(testType);
+        }
+    } catch(e) { navigateToScreen1(testType); }
+}
+
+function closeDraftScreen() { document.getElementById('admin-draft-screen').classList.add('hidden'); }
+
+function createNewTest() { 
+    closeDraftScreen(); 
+    currentDraftId = null;
+    navigateToScreen1(currentCreatingType); 
+}
+
+async function continueDraft() {
+    closeDraftScreen();
+    const draft = window.draftData;
+    if (currentCreatingType === 'free_mock') {
+        currentTest = {
+            title: draft.title, totalQuestions: draft.total_questions, maxMarks: draft.max_marks,
+            duration: draft.duration, rightMarks: draft.right_marks, negativeMarks: draft.negative_marks,
+            subjects: draft.subjects, optionalSubjects: draft.optional_subjects, questions: {}
+        };
+        draft.subjects.forEach(sub => currentTest.questions[sub] = []);
+        const { data: qs } = await db.from('questions').select('*').eq('test_id', draft.id).order('question_number', {ascending: true});
+        if (qs) qs.forEach(q => { if (!currentTest.questions[q.subject]) currentTest.questions[q.subject] = []; currentTest.questions[q.subject].push(q); });
+        
+        document.getElementById('admin-create-test-screen1').classList.add('hidden');
+        document.getElementById('admin-create-test-screen2').classList.remove('hidden');
+        renderSubjectTabs();
+    } 
+    else if (currentCreatingType === 'mini_mock') {
+        currentMiniMock = {
+            title: draft.title, subject: draft.subjects[0], totalQuestions: draft.total_questions,
+            duration: draft.duration, maxMarks: draft.max_marks, rightMarks: draft.right_marks, negativeMarks: draft.negative_marks
+        };
+        const { data: qs } = await db.from('questions').select('*').eq('test_id', draft.id);
+        miniMockQuestions = qs || [];
+        miniMockCurrentQNum = miniMockQuestions.length + 1;
+        
+        document.getElementById('admin-mini-mock-screen1').classList.add('hidden');
+        document.getElementById('admin-mini-mock-screen2').classList.remove('hidden');
+        document.getElementById('mini-screen2-subject-header').innerText = currentMiniMock.subject;
+        document.getElementById('mini-q-total').innerText = currentMiniMock.totalQuestions;
+        updateMiniMockProgress();
+    }
+    else if (currentCreatingType === 'sectional_timer') {
+        currentSectionalTest = {
+            title: draft.title, totalQuestions: draft.total_questions, duration: draft.duration,
+            maxMarks: draft.max_marks, rightMarks: draft.right_marks, negativeMarks: draft.negative_marks,
+            subjects: draft.sectional_timers
+        };
+        sectionalSubjects = draft.sectional_timers;
+        currentSecSubject = sectionalSubjects[0].name;
+        const { data: qs } = await db.from('questions').select('*').eq('test_id', draft.id);
+        sectionalQuestions = {};
+        sectionalSubjects.forEach(sub => sectionalQuestions[sub.name] = []);
+        if (qs) qs.forEach(q => { if (sectionalQuestions[q.subject]) sectionalQuestions[q.subject].push(q); });
+        
+        document.getElementById('admin-sectional-screen1').classList.add('hidden');
+        document.getElementById('admin-sectional-screen2').classList.remove('hidden');
+        renderSectionalSubjectTabs();
+        updateSectionalProgress();
+    }
+}
+
+function navigateToScreen1(type) {
+    document.getElementById('admin-dashboard').classList.add('hidden');
+    document.getElementById('admin-bottom-nav').classList.add('hidden');
+    if (type === 'free_mock') document.getElementById('admin-create-test-screen1').classList.remove('hidden');
+    if (type === 'mini_mock') document.getElementById('admin-mini-mock-screen1').classList.remove('hidden');
+    if (type === 'sectional_timer') document.getElementById('admin-sectional-screen1').classList.remove('hidden');
+}
+
+function promptSaveDraft(type) {
+    let hasData = false;
+    if (type === 'free_mock' && currentTest) hasData = true;
+    if (type === 'mini_mock' && currentMiniMock) hasData = true;
+    if (type === 'sectional_timer' && currentSectionalTest) hasData = true;
+
+    if (!hasData) { 
+        // Direct navigation without function call
+        document.getElementById('admin-create-test-screen1').classList.add('hidden');
+        document.getElementById('admin-create-test-screen2').classList.add('hidden');
+        document.getElementById('admin-mini-mock-screen1').classList.add('hidden');
+        document.getElementById('admin-mini-mock-screen2').classList.add('hidden');
+        document.getElementById('admin-sectional-screen1').classList.add('hidden');
+        document.getElementById('admin-sectional-screen2').classList.add('hidden');
+        document.getElementById('admin-notification-screen').classList.add('hidden');
+        document.getElementById('admin-profile-screen').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        document.getElementById('admin-bottom-nav').classList.remove('hidden');
+        return; 
+    }
+
+    if (confirm("⚠️ You have unsaved changes.\n\nDo you want to save this test as a Draft to continue later?")) {
+        saveDraftToDB(type);
+    } else {
+        // Direct navigation without function call
+        document.getElementById('admin-create-test-screen1').classList.add('hidden');
+        document.getElementById('admin-create-test-screen2').classList.add('hidden');
+        document.getElementById('admin-mini-mock-screen1').classList.add('hidden');
+        document.getElementById('admin-mini-mock-screen2').classList.add('hidden');
+        document.getElementById('admin-sectional-screen1').classList.add('hidden');
+        document.getElementById('admin-sectional-screen2').classList.add('hidden');
+        document.getElementById('admin-notification-screen').classList.add('hidden');
+        document.getElementById('admin-profile-screen').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        document.getElementById('admin-bottom-nav').classList.remove('hidden');
+    }
+}
+
+async function saveDraftToDB(type) {
+    try {
+        const { data: { user } } = await db.auth.getUser();
+        let testData = {}; let questionsData = [];
+
+        if (type === 'free_mock') {
+            testData = {
+                title: currentTest.title || 'Untitled Draft', test_type: 'free_mock',
+                total_questions: currentTest.totalQuestions || 0, max_marks: currentTest.maxMarks || 0,
+                duration: currentTest.duration || 0, right_marks: currentTest.rightMarks || 0,
+                negative_marks: currentTest.negativeMarks || 0, subjects: currentTest.subjects || [],
+                optional_subjects: currentTest.optionalSubjects || null, is_published: false, created_by: user.id
+            };
+            for (const sub in currentTest.questions) {
+                currentTest.questions[sub].forEach((q, idx) => {
+                    questionsData.push({ subject: sub, question_number: idx + 1, question_text: q.text, question_image: q.image, options: q.options, correct_option: q.correct });
+                });
+            }
+        } else if (type === 'mini_mock') {
+            testData = {
+                title: currentMiniMock.title || 'Untitled Draft', test_type: 'mini_mock',
+                total_questions: currentMiniMock.totalQuestions || 0, max_marks: currentMiniMock.maxMarks || 0,
+                duration: currentMiniMock.duration || 0, right_marks: currentMiniMock.rightMarks || 0,
+                negative_marks: currentMiniMock.negativeMarks || 0, subjects: [currentMiniMock.subject],
+                is_published: false, created_by: user.id
+            };
+            miniMockQuestions.forEach((q, idx) => {
+                questionsData.push({ subject: currentMiniMock.subject, question_number: idx + 1, question_text: q.text, question_image: q.image, options: q.options, correct_option: q.correct });
+            });
+        } else if (type === 'sectional_timer') {
+            testData = {
+                title: currentSectionalTest.title || 'Untitled Draft', test_type: 'sectional_timer',
+                total_questions: currentSectionalTest.totalQuestions || 0, max_marks: currentSectionalTest.maxMarks || 0,
+                duration: currentSectionalTest.duration || 0, right_marks: currentSectionalTest.rightMarks || 0,
+                negative_marks: currentSectionalTest.negativeMarks || 0, subjects: sectionalSubjects.map(s => s.name),
+                sectional_timers: sectionalSubjects, is_published: false, created_by: user.id
+            };
+            let globalNum = 1;
+            sectionalSubjects.forEach(sub => {
+                sectionalQuestions[sub.name].forEach(q => {
+                    questionsData.push({ subject: sub.name, question_number: globalNum++, question_text: q.text, question_image: q.image, options: q.options, correct_option: q.correct });
+                });
+            });
+        }
+
+        let testId = currentDraftId;
+        if (testId) {
+            await db.from('tests').update(testData).eq('id', testId);
+            await db.from('questions').delete().eq('test_id', testId);
+        } else {
+            const { data: newTest } = await db.from('tests').insert(testData).select().single();
+            testId = newTest.id;
+        }
+
+        if (questionsData.length > 0) {
+            questionsData = questionsData.map(q => ({ ...q, test_id: testId }));
+            await db.from('questions').insert(questionsData);
+        }
+
+        alert("✅ Draft saved successfully!");
+        
+        // Direct navigation - hide all screens, show dashboard
+        document.getElementById('admin-create-test-screen1').classList.add('hidden');
+        document.getElementById('admin-create-test-screen2').classList.add('hidden');
+        document.getElementById('admin-mini-mock-screen1').classList.add('hidden');
+        document.getElementById('admin-mini-mock-screen2').classList.add('hidden');
+        document.getElementById('admin-sectional-screen1').classList.add('hidden');
+        document.getElementById('admin-sectional-screen2').classList.add('hidden');
+        document.getElementById('admin-notification-screen').classList.add('hidden');
+        document.getElementById('admin-profile-screen').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        document.getElementById('admin-bottom-nav').classList.remove('hidden');
+    } catch (error) {
+        console.error("Draft Save Error:", error);
+        alert("❌ Error saving draft: " + error.message);
+    }
+}
+
+// =============================================
 // INIT
 // =============================================
 generateCaptcha();
